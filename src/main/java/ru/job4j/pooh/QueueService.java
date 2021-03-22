@@ -7,16 +7,9 @@ import java.util.concurrent.ConcurrentLinkedQueue;
  * Обрабатывает одну очередь сообщений для всех отправителей и получателей.
  */
 public class QueueService implements Service {
+    private static final ConcurrentLinkedQueue<String> emptyQueue = new ConcurrentLinkedQueue<>();
     private final ConcurrentHashMap<String, ConcurrentLinkedQueue<String>> queue =
             new ConcurrentHashMap<>();
-    private ConcurrentLinkedQueue<String> emptyQueue;
-
-    private ConcurrentLinkedQueue<String> getEmptyQueue() {
-        if (emptyQueue == null) {
-            emptyQueue = new ConcurrentLinkedQueue<>();
-        }
-        return emptyQueue;
-    }
 
     private String addMessage(String queueName, String message) {
         queue.putIfAbsent(queueName, new ConcurrentLinkedQueue<>());
@@ -25,7 +18,7 @@ public class QueueService implements Service {
     }
 
     private String getMessage(String queueName) {
-        String result = queue.getOrDefault(queueName, getEmptyQueue()).poll();
+        String result = queue.getOrDefault(queueName, emptyQueue).poll();
         return result == null ? "" : result;
     }
 

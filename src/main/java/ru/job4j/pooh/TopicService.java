@@ -9,16 +9,9 @@ import java.util.concurrent.ConcurrentLinkedQueue;
  * Сообщения, поступающие в общую очередь, копируются в индивидуальные очереди потребителей.
  */
 public class TopicService implements Service {
+    private static final ConcurrentLinkedQueue<String> emptyQueue = new ConcurrentLinkedQueue<>();
     private final ConcurrentHashMap<TopicKey, ConcurrentLinkedQueue<String>> queue =
             new ConcurrentHashMap<>();
-    private ConcurrentLinkedQueue<String> emptyQueue;
-
-    private ConcurrentLinkedQueue<String> getEmptyQueue() {
-        if (emptyQueue == null) {
-            emptyQueue = new ConcurrentLinkedQueue<>();
-        }
-        return emptyQueue;
-    }
 
     private String addMessage(String queueName, String message) {
         queue.putIfAbsent(new TopicKey(queueName, ""), new ConcurrentLinkedQueue<>());
@@ -33,12 +26,12 @@ public class TopicService implements Service {
     private String getMessage(String queueName, String clientId) {
         TopicKey mainQueueKey = new TopicKey(queueName, "");
         TopicKey topicKey = new TopicKey(queueName, clientId);
-        ConcurrentLinkedQueue<String> mainQueue = queue.getOrDefault(mainQueueKey, getEmptyQueue());
+        ConcurrentLinkedQueue<String> mainQueue = queue.getOrDefault(mainQueueKey, emptyQueue);
         if (mainQueue.isEmpty()) {
             return "";
         }
         queue.putIfAbsent(topicKey, new ConcurrentLinkedQueue<>(mainQueue));
-        String result = queue.getOrDefault(topicKey, getEmptyQueue()).poll();
+        String result = queue.getOrDefault(topicKey, emptyQueue).poll();
         return result == null ? "" : result;
     }
 
